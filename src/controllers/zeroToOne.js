@@ -46,7 +46,7 @@ const zeroToOne = async (req, res) => {
         }
       } finally {
         zeroToOneDoc.queries[index].status = STATUS_TYPES.COMPLETED
-        updateStream(zeroToOneDoc)
+        updateStream(stream, zeroToOneDoc)
       }
     }
     verboseConsole("[GENERATING FINAL ANALYSIS]: ...", "green")
