@@ -1,0 +1,5 @@
+MONGO_URI=link to your mongodb instance
+CLIENT_ORIGIN=link to your client url
+SERPER_API_KEY= your serper api key
+MAX_AMOUNT_OF_SEARCH_QUERIES= max amount of search queries
+OPENAI_API_KEY= your link to openai api key
