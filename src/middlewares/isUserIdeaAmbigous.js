@@ -4,12 +4,19 @@ import {
 } from "../consts/index.js"
 import verboseConsole from "../utils/console/verboseConsole.js"
 import { validateIsUserIdeaAmbiguous } from "../utils/langchain/zeroToOne.js"
+import ZeroToOne from "../models/ZeroToOne.js"
 
 const isUserIdeaAmibguous = async (req, res, next) => {
   try {
     const { input } = req.body
+    const zeroToOneDoc = new ZeroToOne({ input })
     verboseConsole(`[USER INPUT]: ${input}`, "cyan")
-    const validate = await validateIsUserIdeaAmbiguous(input)
+    const {
+      response: validate,
+      tokenUsage: validateTokenUsage,
+    } = await validateIsUserIdeaAmbiguous(input, zeroToOneDoc._id)
+    zeroToOneDoc.tokenUsage.push(validateTokenUsage)
+    zeroToOneDoc.save()
     verboseConsole(`[VALIDATING]: Idea ambiguity`, "yellow")
     if (validate.isIdeaAmbiguous) {
       verboseConsole(
@@ -22,9 +29,10 @@ const isUserIdeaAmibguous = async (req, res, next) => {
         recommendation: validate.recommendation,
       })
     }
+    req.zeroToOneDoc = zeroToOneDoc
     next()
   } catch (err) {
-    console.error(err)
+    console.error("Unexpected error in isUserIdeaAmbigous middleware", err)
     return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE })
   }
 }

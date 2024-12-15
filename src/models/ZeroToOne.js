@@ -1,7 +1,7 @@
-import mongoose from "mongoose"
-import { STATUS_TYPES } from "../consts/index.js"
-
-const { Schema } = mongoose
+import mongoose, { Schema } from "mongoose"
+import { TokenUsageSchema } from "../schemas/TokenUsage.js"
+import { QuerySchema } from "../schemas/Query.js"
+import { FinalAnalysisSchema } from "../schemas/FinalAnalysis.js"
 
 const ZeroToOneValidateSchema = new Schema(
   {
@@ -11,62 +11,36 @@ const ZeroToOneValidateSchema = new Schema(
     },
     queries: [
       {
-        query: {
-          type: String,
-          required: true,
-        },
-        status: {
-          type: String,
-          default: STATUS_TYPES.PENDING,
-          enum: [
-            STATUS_TYPES.PENDING,
-            STATUS_TYPES.SEARCHING,
-            STATUS_TYPES.COMPLETED,
-          ],
-        },
-        results: [
-          {
-            title: {
-              type: String,
-            },
-            link: {
-              type: String,
-            },
-            snippet: {
-              type: String,
-            },
-            analysis: {
-              isProjectOrCompany: {
-                type: Boolean,
-              },
-              description: {
-                type: String,
-              },
-              insights: {
-                type: String,
-              },
-            },
-          },
-        ],
+        type: QuerySchema,
       },
     ],
     finalAnalysis: {
-      uniqueness: {
-        type: Number,
-        min: 1,
-        max: 100,
+      type: FinalAnalysisSchema,
+    },
+    tokenUsage: [
+      {
+        type: TokenUsageSchema,
       },
-      description: {
-        type: String,
-      },
-      recommendations: {
-        type: String,
-      },
+    ],
+    totalCost: {
+      type: Number,
+      default: 0,
     },
   },
   {
     timestamps: true,
   }
 )
+
+ZeroToOneValidateSchema.pre("save", function(next) {
+  if (this.tokenUsage && this.tokenUsage.length > 0) {
+    this.totalCost = this.tokenUsage.reduce((total, usage) => {
+      return total + (usage.cost || 0)
+    }, 0)
+  } else {
+    this.totalCost = 0
+  }
+  next()
+})
 
 export default mongoose.model("ZeroToOneValidate", ZeroToOneValidateSchema)
