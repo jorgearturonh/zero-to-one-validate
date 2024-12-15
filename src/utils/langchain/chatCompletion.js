@@ -48,11 +48,7 @@ const chatOpenAICompletion = async (
   }
 }
 
-export const chatCompletionWithTokenUsage = async (
-  systemPrompt,
-  input,
-  source
-) => {
+export const chatCompletionWithTokenUsage = async (systemPrompt, input) => {
   const { content, response_metadata, model } = await chatOpenAICompletion(
     systemPrompt,
     input
@@ -62,7 +58,6 @@ export const chatCompletionWithTokenUsage = async (
       ...response_metadata.tokenUsage,
     },
     model,
-    source,
   }
   return { response: JSON.parse(content), tokenUsage }
 }

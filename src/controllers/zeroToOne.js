@@ -14,8 +14,7 @@ const zeroToOne = async (req, res) => {
     const { input } = req.body
     const zeroToOneDoc = req.zeroToOneDoc
     const { response, tokenUsage: queriesTokenUsage } = await generateQueries(
-      input,
-      zeroToOneDoc._id
+      input
     )
     const { queries } = response
     verboseConsole(`[QUERIES TO SEARCH IN SERPER]: ${queries}`, "blue")
@@ -34,11 +33,7 @@ const zeroToOne = async (req, res) => {
           const {
             response: searchAnalysisResult,
             tokenUsage: searchResultTokenUsage,
-          } = await generateSearchResultAnalysis(
-            input,
-            result,
-            zeroToOneDoc._id
-          )
+          } = await generateSearchResultAnalysis(input, result)
           zeroToOneDoc.tokenUsage.push(searchResultTokenUsage)
           if (searchAnalysisResult.isProjectOrCompany) {
             verboseConsole(
@@ -69,8 +64,7 @@ const zeroToOne = async (req, res) => {
           title: result.title,
           snippet: result.snippet,
         })),
-      })),
-      zeroToOneDoc._id
+      }))
     )
     zeroToOneDoc.finalAnalysis = finalAnalysis
     zeroToOneDoc.tokenUsage.push(finalAnalysisTokenUsage)

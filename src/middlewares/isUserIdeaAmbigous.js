@@ -14,7 +14,7 @@ const isUserIdeaAmibguous = async (req, res, next) => {
     const {
       response: validate,
       tokenUsage: validateTokenUsage,
-    } = await validateIsUserIdeaAmbiguous(input, zeroToOneDoc._id)
+    } = await validateIsUserIdeaAmbiguous(input)
     zeroToOneDoc.tokenUsage.push(validateTokenUsage)
     zeroToOneDoc.save()
     verboseConsole(`[VALIDATING]: Idea ambiguity`, "yellow")
