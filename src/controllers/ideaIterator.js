@@ -1,10 +1,10 @@
 import { generateIdeaIteratorRecommendations } from "../utils/langchain/zeroToOne.js"
 import { IdeaIteratorModel } from "../models/IdeaIterator.js"
-
+import verboseConsole from "../utils/console/verboseConsole.js"
 export const generateIdeaIterator = async (req, res) => {
   try {
     const { input } = req.body
-
+    verboseConsole(`[IDEA ITERATOR]: ${input}`, "cyan")
     if (!input) {
       return res.status(400).json({ error: "Input is required" })
     }
@@ -18,6 +18,11 @@ export const generateIdeaIterator = async (req, res) => {
       recommendations: response.recommendations,
       tokenUsage,
     })
+
+    verboseConsole(
+      `[ITERATION RECOMMENDATIONS]: ${response.recommendations}`,
+      "blue"
+    )
 
     ideaIterator.save()
 
