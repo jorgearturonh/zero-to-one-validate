@@ -4,6 +4,7 @@ import {
   queryValidateProjectOrCompanyPrompt,
   finalAnalysisPrompt,
   isUserIdeaAmibguousPrompt,
+  ideaIteratorPrompt,
 } from "./prompts.js"
 
 export const generateQueries = async input => {
@@ -39,6 +40,14 @@ export const validateIsUserIdeaAmbiguous = async input => {
   const response = await chatCompletionWithTokenUsage(
     isUserIdeaAmibguousPrompt,
     ` User idea: ${input} !IMPORTANT json FORMAT: {${isAmbiguousVarName}: boolean, recommendation: String}`
+  )
+  return response
+}
+
+export const generateIdeaIteratorRecommendations = async input => {
+  const response = await chatCompletionWithTokenUsage(
+    ideaIteratorPrompt,
+    `User idea: ${input} JSON {recommendations: [String]} UP to 5 recommendations to immprove idea`
   )
   return response
 }
