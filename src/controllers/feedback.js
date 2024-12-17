@@ -1,4 +1,5 @@
 import { FeedbackModel } from "../models/Feedback.js"
+import verboseConsole from "../utils/console/verboseConsole.js"
 
 const feedback = async (req, res) => {
   try {
@@ -8,6 +9,7 @@ const feedback = async (req, res) => {
       missingFeatures,
       overallExperience,
     } = req.body
+    verboseConsole(`[FEEDBACK]: ${req.body}`, "blue")
     const feedback = new FeedbackModel({
       likesMost,
       improvements,
