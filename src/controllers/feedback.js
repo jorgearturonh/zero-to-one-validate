@@ -9,7 +9,10 @@ const feedback = async (req, res) => {
       missingFeatures,
       overallExperience,
     } = req.body
-    verboseConsole(`[FEEDBACK]: ${req.body}`, "blue")
+    verboseConsole(
+      `[FEEDBACK]: Likes most: ${likesMost}, Improvements: ${improvements}, Missing features: ${missingFeatures}, Overall experience: ${overallExperience}`,
+      "blue"
+    )
     const feedback = new FeedbackModel({
       likesMost,
       improvements,
