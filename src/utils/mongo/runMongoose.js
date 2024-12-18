@@ -2,6 +2,7 @@ import dotenv from "dotenv"
 import mongoose from "mongoose"
 import { mongoOptions } from "../../consts/config.js"
 import runRoutes from "../../routes/runRoutes.js"
+import { initSocket } from "../socket/index.js"
 
 dotenv.config()
 
@@ -14,9 +15,14 @@ const runMongoose = app => {
       console.log("Connected to MongoDB")
 
       runRoutes(app)
-      app.listen(EXPRESS_PORT, () => {
+
+      // Create HTTP server from Express app
+      const server = app.listen(EXPRESS_PORT, () => {
         console.log(`Server started on port ${EXPRESS_PORT}`)
       })
+
+      // Initialize Socket.IO with the HTTP server
+      initSocket(server)
     })
     .catch(err => {
       console.error("Error connecting to database", err)

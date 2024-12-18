@@ -4,36 +4,75 @@ import {
   generateSearchResultAnalysis,
 } from "../utils/langchain/index.js"
 import makeSerperRequest from "../utils/serper/index.js"
-import { endStream, initStream, updateStream } from "../utils/stream/index.js"
-import { STATUS_TYPES } from "../consts/index.js"
+import { AMBIGOUS_IDEA_MESSAGE, STATUS_TYPES } from "../consts/index.js"
 import verboseConsole from "../utils/console/verboseConsole.js"
+import { emitUpdate, joinRoom } from "../utils/socket/index.js"
+import { validateIsUserIdeaAmbiguous } from "../utils/langchain/zeroToOne.js"
+import ZeroToOne from "../models/ZeroToOne.js"
 
 const zeroToOne = async (req, res) => {
-  const stream = initStream(res)
+  const socketId = req.headers["socket-id"]
+
   try {
     const { input } = req.body
-    const zeroToOneDoc = req.zeroToOneDoc
+    const zeroToOneDoc = new ZeroToOne({ input })
+    verboseConsole(`[USER INPUT]: ${input}`, "cyan")
+    const {
+      response: validate,
+      tokenUsage: validateTokenUsage,
+    } = await validateIsUserIdeaAmbiguous(input)
+    zeroToOneDoc.tokenUsage.push(validateTokenUsage)
+    zeroToOneDoc.save()
+    verboseConsole(`[VALIDATING]: Idea ambiguity`, "yellow")
+    if (validate.isIdeaAmbiguous) {
+      verboseConsole(
+        `[RESULT]: Idea is ambiguous, check the recommendation`,
+        "red"
+      )
+      emitUpdate(
+        socketId,
+        {
+          message: AMBIGOUS_IDEA_MESSAGE,
+          isIdeaAmbiguous: validate.isIdeaAmbiguous,
+          recommendation: validate.recommendation,
+        },
+        "ambiguousIdea"
+      )
+      return
+    }
+
+    const room = `analysis-${zeroToOneDoc._id}`
+
+    if (socketId) {
+      joinRoom(socketId, room)
+    }
+
     const { response, tokenUsage: queriesTokenUsage } = await generateQueries(
       input
     )
     const { queries } = response
+
     verboseConsole(`[QUERIES TO SEARCH IN SERPER]: ${queries}`, "blue")
     zeroToOneDoc.queries = queries.map(query => ({ query }))
     zeroToOneDoc.tokenUsage.push(queriesTokenUsage)
-    updateStream(stream, zeroToOneDoc)
+    emitUpdate(room, zeroToOneDoc)
+
     for (let index = 0; index < queries.length; index++) {
       const query = queries[index]
       verboseConsole(`[SEARCHING QUERY]: ${query}`, "purple")
       zeroToOneDoc.queries[index].status = STATUS_TYPES.SEARCHING
-      updateStream(stream, zeroToOneDoc)
+      emitUpdate(room, zeroToOneDoc)
+
       try {
         const internetSearchResults = await makeSerperRequest(query)
         verboseConsole("[STARTING ANALYSIS OF INTERNET RESULTS]:", "pink")
+
         for (const result of internetSearchResults) {
           const {
             response: searchAnalysisResult,
             tokenUsage: searchResultTokenUsage,
           } = await generateSearchResultAnalysis(input, result)
+
           zeroToOneDoc.tokenUsage.push(searchResultTokenUsage)
           if (searchAnalysisResult.isProjectOrCompany) {
             verboseConsole(
@@ -46,14 +85,15 @@ const zeroToOne = async (req, res) => {
               analysis: searchAnalysisResult,
             })
           }
-          updateStream(stream, zeroToOneDoc)
+          emitUpdate(room, zeroToOneDoc)
         }
       } finally {
         zeroToOneDoc.queries[index].status = STATUS_TYPES.COMPLETED
-        updateStream(stream, zeroToOneDoc)
+        emitUpdate(room, zeroToOneDoc)
       }
     }
-    verboseConsole("[GENERATING FINAL ANALYSIS]: ...", "green")
+
+    // Final analysis
     const {
       response: finalAnalysis,
       tokenUsage: finalAnalysisTokenUsage,
@@ -66,25 +106,19 @@ const zeroToOne = async (req, res) => {
         })),
       }))
     )
+
     zeroToOneDoc.finalAnalysis = finalAnalysis
     zeroToOneDoc.tokenUsage.push(finalAnalysisTokenUsage)
-    verboseConsole(
-      `[FINAL ANALYSIS GENERATED]: \nUniqueness: ${zeroToOneDoc.finalAnalysis.uniqueness} \nDescription: ${zeroToOneDoc.finalAnalysis.description} \nRecommendations: ${zeroToOneDoc.finalAnalysis.recommendations}`,
-      "purple"
-    )
-    updateStream(stream, zeroToOneDoc)
-    endStream(stream)
+    emitUpdate(room, zeroToOneDoc)
 
-    zeroToOneDoc.save()
-    if (!res.headersSent) {
-      res.status(200).json({
-        success: true,
-        data: zeroToOneDoc,
-      })
-    }
+    await zeroToOneDoc.save()
+    res.status(200).json({
+      success: true,
+      data: zeroToOneDoc,
+      room,
+    })
   } catch (err) {
     console.log(err)
-    endStream(stream)
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
