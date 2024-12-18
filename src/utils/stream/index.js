@@ -4,7 +4,7 @@ const isStream = !!process.env.STREAM_MODE_ENABLED
 
 export const updateStream = (stream, data) => {
   if (!isStream) return
-  stream.push(JSON.stringify(data))
+  stream.push(data)
   return
 }
 
@@ -20,6 +20,7 @@ export const initStream = res => {
   const stream = new Readable({
     read() {},
     encoding: "utf8",
+    objectMode: true,
   })
   stream.pipe(res)
   return stream
