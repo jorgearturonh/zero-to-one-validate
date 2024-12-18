@@ -19,6 +19,7 @@ export const initStream = res => {
 
   const stream = new Readable({
     read() {},
+    encoding: "utf8",
   })
   stream.pipe(res)
   return stream
