@@ -26,6 +26,10 @@ const ZeroToOneValidateSchema = new Schema(
       type: Number,
       default: 0,
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true,

@@ -31,7 +31,7 @@ export const initSocket = server => {
       try {
         console.log(data)
         const req = {
-          body: { input: data.input },
+          body: { ...data },
           headers: { "socket-id": socket.id },
         }
         const res = createMockResponse(socket)
