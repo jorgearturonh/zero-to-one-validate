@@ -3,21 +3,6 @@ import zeroToOne from "../../controllers/zeroToOne.js"
 
 let io
 
-const createMockResponse = socket => {
-  return {
-    json: data => {
-      socket.emit("validation-result", data)
-    },
-    status: code => {
-      return {
-        json: data => {
-          socket.emit("validation-result", { status: code, ...data })
-        },
-      }
-    },
-  }
-}
-
 export const initSocket = server => {
   io = new Server(server, {
     cors: {
@@ -29,14 +14,12 @@ export const initSocket = server => {
   io.on("connection", socket => {
     socket.on("validate-idea", async data => {
       try {
-        console.log(data)
         const req = {
           body: { ...data },
           headers: { "socket-id": socket.id },
         }
-        const res = createMockResponse(socket)
 
-        await zeroToOne(req, res)
+        await zeroToOne(req)
       } catch (error) {
         socket.emit("validation-error", { error: error.message })
       }

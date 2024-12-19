@@ -11,7 +11,7 @@ import { validateIsUserIdeaAmbiguous } from "../utils/langchain/zeroToOne.js"
 import ZeroToOne from "../models/ZeroToOne.js"
 import jwt from "jsonwebtoken"
 
-const zeroToOne = async (req, res) => {
+const zeroToOne = async req => {
   const socketId = req.headers["socket-id"]
 
   try {
@@ -124,19 +124,8 @@ const zeroToOne = async (req, res) => {
     emitUpdate(room, zeroToOneDoc)
 
     await zeroToOneDoc.save()
-    res.status(200).json({
-      success: true,
-      data: zeroToOneDoc,
-      room,
-    })
   } catch (err) {
     console.log(err)
-    if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        error: err,
-      })
-    }
   }
 }
 
