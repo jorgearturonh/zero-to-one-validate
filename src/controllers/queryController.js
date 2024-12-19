@@ -5,8 +5,6 @@ export const getUserQueries = async (req, res) => {
     // Get user ID from authenticated request
     const user = req.user.id
 
-    console.log(user)
-
     const queries = await ZeroToOne.find({ user }).sort({ createdAt: -1 })
 
     return res.status(200).json({
