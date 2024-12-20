@@ -8,6 +8,12 @@ export const initSocket = server => {
     cors: {
       origin: process.env.CLIENT_ORIGIN,
       methods: ["GET", "POST"],
+      pingTimeout: 60000,
+      pingInterval: 25000,
+      connectTimeout: 5000,
+      maxHttpBufferSize: 1e6, // 1MB
+      transports: ["websocket"],
+      allowEIO3: false,
     },
   })
 

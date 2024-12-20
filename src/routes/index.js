@@ -8,6 +8,8 @@ import {
   verifyEmail,
   requestPasswordReset,
   resetPassword,
+  logout,
+  refreshAccessToken,
 } from "../controllers/auth.js"
 import { getUserQueries } from "../controllers/getUserSearches.js"
 import { getUserQuery } from "../controllers/getUserSearch.js"
@@ -34,5 +36,7 @@ router.post("/auth/login", authLimiter, login)
 router.get("/auth/verify/:token", verifyEmail)
 router.post("/auth/password-reset-request", requestPasswordReset)
 router.post("/auth/password-reset", resetPassword)
+router.post("/auth/logout", auth, logout)
+router.post("/auth/refresh-token", refreshAccessToken)
 
 export default router

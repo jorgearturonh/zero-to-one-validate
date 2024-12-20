@@ -5,6 +5,18 @@ import {
   sendPasswordResetEmail,
 } from "../utils/email/index.js"
 import verboseConsole from "../utils/console/verboseConsole.js"
+import { BlacklistedToken } from "../models/BlacklistedToken.js"
+import crypto from "crypto"
+
+const generateAccessToken = userId => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: "15m", // Short lived access token
+  })
+}
+
+const generateRefreshToken = () => {
+  return crypto.randomBytes(40).toString("hex")
+}
 
 export const login = async (req, res) => {
   try {
@@ -19,11 +31,16 @@ export const login = async (req, res) => {
       return res.status(401).json({ error: "Please verify your email first" })
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "24h",
+    // Generate tokens
+    const accessToken = generateAccessToken(user._id)
+    const refreshToken = generateRefreshToken()
+
+    // Store refresh token
+    user.refreshTokens.push({
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     })
 
-    user.tokens = user.tokens.concat({ token })
     await user.save()
 
     res.json({
@@ -32,7 +49,8 @@ export const login = async (req, res) => {
         email: user.email,
         name: user.name,
       },
-      token,
+      accessToken,
+      refreshToken,
     })
   } catch (error) {
     res.status(500).json({ error: "Error logging in" })
@@ -163,5 +181,50 @@ export const resetPassword = async (req, res) => {
     res.json({ message: "Password reset successful" })
   } catch (error) {
     res.status(500).json({ error: "Error resetting password" })
+  }
+}
+
+export const logout = async (req, res) => {
+  try {
+    const { accessToken, refreshToken } = req.body
+    const user = req.user
+
+    // Blacklist the access token
+    const decoded = jwt.decode(accessToken)
+    await BlacklistedToken.create({
+      token: accessToken,
+      expiresAt: new Date(decoded.exp * 1000),
+    })
+
+    // Remove refresh token
+    user.refreshTokens = user.refreshTokens.filter(
+      t => t.token !== refreshToken
+    )
+    await user.save()
+
+    res.json({ message: "Logged out successfully" })
+  } catch (error) {
+    res.status(500).json({ error: "Error logging out" })
+  }
+}
+
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body
+    const user = await User.findOne({
+      "refreshTokens.token": refreshToken,
+      "refreshTokens.expiresAt": { $gt: new Date() },
+    })
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid refresh token" })
+    }
+
+    // Generate new access token
+    const accessToken = generateAccessToken(user._id)
+
+    res.json({ accessToken })
+  } catch (error) {
+    res.status(500).json({ error: "Error refreshing token" })
   }
 }

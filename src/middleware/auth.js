@@ -1,11 +1,18 @@
 import jwt from "jsonwebtoken"
 import { User } from "../models/User.js"
+import { BlacklistedToken } from "../models/BlacklistedToken.js"
 
 export const auth = async (req, res, next) => {
   try {
     const token = req.header("Authorization").replace("Bearer ", "")
     if (!token) {
       throw new Error()
+    }
+
+    // Check if token is blacklisted
+    const isBlacklisted = await BlacklistedToken.findOne({ token })
+    if (isBlacklisted) {
+      throw new Error("Token is blacklisted")
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET)

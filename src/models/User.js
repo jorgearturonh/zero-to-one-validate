@@ -38,6 +38,18 @@ const UserSchema = new Schema(
         ref: "ZeroToOneValidate",
       },
     ],
+    refreshTokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+        expiresAt: {
+          type: Date,
+          required: true,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
