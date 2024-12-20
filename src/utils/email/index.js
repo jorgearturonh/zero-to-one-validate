@@ -16,7 +16,7 @@ export const sendVerificationEmail = async (email, token) => {
   const verificationUrl = `${APP_URL}/verify-email/${token}`
 
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
+    from: `"FindSimilarStartups.com" <${process.env.EMAIL_FROM}>`,
     to: email,
     subject: "Welcome to Find Similar Startups - Verify Your Email",
     html: `
@@ -48,7 +48,7 @@ export const sendPasswordResetEmail = async (email, token) => {
   const resetUrl = `${APP_URL}/reset-password/${token}`
 
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
+    from: `"FindSimilarStartups.com" <${process.env.EMAIL_FROM}>`,
     to: email,
     subject: "Reset Your Find Similar Startups Password",
     html: `
