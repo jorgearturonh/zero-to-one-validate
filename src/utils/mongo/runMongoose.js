@@ -10,7 +10,9 @@ const EXPRESS_PORT = process.env.PORT || 3001
 
 const runMongoose = app => {
   mongoose
-    .connect(process.env.MONGO_URI, mongoOptions)
+    .connect(process.env.MONGO_URI, {
+      ...mongoOptions,
+    })
     .then(async () => {
       console.log("Connected to MongoDB")
 
