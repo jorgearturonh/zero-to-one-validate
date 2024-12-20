@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken"
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
-} from "../utils/email.js"
+} from "../utils/email/index.js"
 import verboseConsole from "../utils/console/verboseConsole.js"
 
 export const login = async (req, res) => {
