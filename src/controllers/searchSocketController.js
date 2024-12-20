@@ -8,14 +8,26 @@ import { AMBIGOUS_IDEA_MESSAGE, STATUS_TYPES } from "../consts/index.js"
 import verboseConsole from "../utils/console/verboseConsole.js"
 import { emitUpdate, joinRoom } from "../utils/socket/index.js"
 import { validateIsUserIdeaAmbiguous } from "../utils/langchain/zeroToOne.js"
-import ZeroToOne from "../models/ZeroToOne.js"
+import ZeroToOne from "../models/Search.js"
+import jwt from "jsonwebtoken"
 
-const zeroToOne = async (req, res) => {
+const zeroToOne = async req => {
   const socketId = req.headers["socket-id"]
 
   try {
-    const { input } = req.body
-    const zeroToOneDoc = new ZeroToOne({ input })
+    const { input, token } = req.body
+    let userId
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      userId = decoded.userId
+    }
+
+    const zeroToOneDoc = new ZeroToOne({
+      input,
+      user: userId,
+    })
+
     verboseConsole(`[USER INPUT]: ${input}`, "cyan")
     const {
       response: validate,
@@ -112,19 +124,8 @@ const zeroToOne = async (req, res) => {
     emitUpdate(room, zeroToOneDoc)
 
     await zeroToOneDoc.save()
-    res.status(200).json({
-      success: true,
-      data: zeroToOneDoc,
-      room,
-    })
   } catch (err) {
     console.log(err)
-    if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        error: err,
-      })
-    }
   }
 }
 
