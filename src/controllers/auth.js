@@ -7,15 +7,16 @@ import {
 import verboseConsole from "../utils/console/verboseConsole.js"
 import { BlacklistedToken } from "../models/BlacklistedToken.js"
 import crypto from "crypto"
+import ms from "ms"
 
 const generateAccessToken = userId => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: "15m", // Short lived access token
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
   })
 }
 
 const generateRefreshToken = () => {
-  return crypto.randomBytes(40).toString("hex")
+  return crypto.randomBytes(32).toString("base64url")
 }
 
 export const login = async (req, res) => {
@@ -38,7 +39,7 @@ export const login = async (req, res) => {
     // Store refresh token
     user.refreshTokens.push({
       token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      expiresAt: new Date(Date.now() + ms(process.env.REFRESH_TOKEN_EXPIRY)),
     })
 
     await user.save()

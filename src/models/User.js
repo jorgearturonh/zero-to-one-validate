@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
+import ms from "ms"
 
 const UserSchema = new Schema(
   {
@@ -24,14 +25,6 @@ const UserSchema = new Schema(
     verificationTokenExpires: Date,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
-    tokens: [
-      {
-        token: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
     zeroToOneValidations: [
       {
         type: Schema.Types.ObjectId,
@@ -71,18 +64,40 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
 
 // Generate verification token
 UserSchema.methods.generateVerificationToken = function() {
-  const verificationToken = crypto.randomBytes(32).toString("hex")
-  this.verificationToken = verificationToken
-  this.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-  return verificationToken
+  const { token, hashedToken, expiresAt } = this.generateSecureToken(
+    process.env.VERIFICATION_TOKEN_EXPIRY
+  )
+
+  this.verificationToken = hashedToken
+  this.verificationTokenExpires = expiresAt
+
+  return token
 }
 
 // Generate password reset token
 UserSchema.methods.generatePasswordResetToken = function() {
-  const resetToken = crypto.randomBytes(32).toString("hex")
-  this.resetPasswordToken = resetToken
-  this.resetPasswordExpires = Date.now() + 3600000 // 1 hour
-  return resetToken
+  const { token, hashedToken, expiresAt } = this.generateSecureToken(
+    process.env.PASSWORD_RESET_EXPIRY
+  )
+
+  this.resetPasswordToken = hashedToken
+  this.resetPasswordExpires = expiresAt
+
+  return token
+}
+
+UserSchema.methods.generateSecureToken = function(expiryTime) {
+  const token = crypto.randomBytes(32).toString("base64url")
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex")
+
+  return {
+    token,
+    hashedToken,
+    expiresAt: new Date(Date.now() + ms(expiryTime)),
+  }
 }
 
 export const User = mongoose.model("User", UserSchema)
