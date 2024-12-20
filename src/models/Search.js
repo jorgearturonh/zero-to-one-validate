@@ -3,7 +3,7 @@ import { TokenUsageSchema } from "../schemas/TokenUsage.js"
 import { QuerySchema } from "../schemas/Query.js"
 import { FinalAnalysisSchema } from "../schemas/FinalAnalysis.js"
 
-const ZeroToOneValidateSchema = new Schema(
+const SearchSchema = new Schema(
   {
     input: {
       type: String,
@@ -36,7 +36,7 @@ const ZeroToOneValidateSchema = new Schema(
   }
 )
 
-ZeroToOneValidateSchema.pre("save", function(next) {
+SearchSchema.pre("save", function(next) {
   if (this.tokenUsage && this.tokenUsage.length > 0) {
     this.totalCost = this.tokenUsage.reduce((total, usage) => {
       return total + (usage.cost || 0)
@@ -47,4 +47,4 @@ ZeroToOneValidateSchema.pre("save", function(next) {
   next()
 })
 
-export default mongoose.model("ZeroToOneValidate", ZeroToOneValidateSchema)
+export default mongoose.model("ZeroToOneValidate", SearchSchema)

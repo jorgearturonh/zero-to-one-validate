@@ -1,4 +1,4 @@
-import ZeroToOne from "../models/ZeroToOne.js"
+import ZeroToOne from "../models/Search.js"
 
 export const getUserQueries = async (req, res) => {
   try {

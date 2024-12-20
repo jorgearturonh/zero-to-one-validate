@@ -9,7 +9,8 @@ import {
   requestPasswordReset,
   resetPassword,
 } from "../controllers/auth.js"
-import { getUserQueries } from "../controllers/queryController.js"
+import { getUserQueries } from "../controllers/getUserSearches.js"
+import { getUserQuery } from "../controllers/getUserSearch.js"
 
 const router = express.Router()
 
@@ -18,6 +19,7 @@ router.post("/feedback", feedback)
 
 // Get all queries for authenticated user
 router.get("/queries", auth, getUserQueries)
+router.get("/queries/:id", auth, getUserQuery)
 
 // Auth routes
 router.post("/auth/register", registerUser)

@@ -1,5 +1,5 @@
 import { Server } from "socket.io"
-import zeroToOne from "../../controllers/zeroToOne.js"
+import searchSocketController from "../../controllers/searchSocketController.js"
 
 let io
 
@@ -19,7 +19,7 @@ export const initSocket = server => {
           headers: { "socket-id": socket.id },
         }
 
-        await zeroToOne(req)
+        await searchSocketController(req)
       } catch (error) {
         socket.emit("validation-error", { error: error.message })
       }

@@ -8,7 +8,7 @@ import { AMBIGOUS_IDEA_MESSAGE, STATUS_TYPES } from "../consts/index.js"
 import verboseConsole from "../utils/console/verboseConsole.js"
 import { emitUpdate, joinRoom } from "../utils/socket/index.js"
 import { validateIsUserIdeaAmbiguous } from "../utils/langchain/zeroToOne.js"
-import ZeroToOne from "../models/ZeroToOne.js"
+import ZeroToOne from "../models/Search.js"
 import jwt from "jsonwebtoken"
 
 const zeroToOne = async req => {
